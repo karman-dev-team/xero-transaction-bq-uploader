@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 	"text/template"
@@ -46,7 +45,6 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleImport(w http.ResponseWriter, r *http.Request) {
-	// Simulate an import process
 	msg, err := importXeroData()
 	response := map[string]string{
 		"message": msg,
@@ -73,9 +71,12 @@ func importXeroData() (string, error) {
 	for _, tenant := range tenantID {
 		transactions, err := getAllTransactions(App.Oauth2Token, tenant.ID)
 		if err != nil {
-			return "", err
+			return "Error", err
 		}
-		fmt.Println(transactions)
+		err = uploadInvoices(transactions, tenant.Company)
+		if err != nil {
+			return "Error", err
+		}
 	}
 	return "Success", nil
 }

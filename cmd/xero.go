@@ -34,7 +34,7 @@ func getAllTransactions(token *oauth2.Token, tenantID string) ([]models.XeroTran
 			break
 		}
 		page++
-		if page%59 == 0 {
+		if page%20 == 0 {
 			time.Sleep(60 * time.Second)
 		}
 	}
@@ -62,7 +62,6 @@ func getTransactions(token *oauth2.Token, page int, tenantID string) ([]byte, er
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(string(body))
 	if resp.StatusCode != http.StatusOK {
 		fmt.Printf("body: %s\n", body)
 		return nil, fmt.Errorf("unexpected status: %s", resp.Status)

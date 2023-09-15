@@ -36,7 +36,7 @@ func uploadToBQ(batches [][]models.BQTransaction) error {
 	defer client.Close()
 
 	dataset := client.Dataset("internal_reporting")
-	table := dataset.Table("xero_invoices")
+	table := dataset.Table("xero_transactions")
 	uploader := table.Uploader()
 
 	for i, batch := range batches {
@@ -74,8 +74,17 @@ func splitIntoBatches(slice []models.BQTransaction, batchSize int) [][]models.BQ
 func convertToBQInvoice(transactions []models.XeroTransaction, company string) ([]models.BQTransaction, error) {
 	bqTransactions := []models.BQTransaction{}
 	for _, transaction := range transactions {
+		date, err := time.Parse("2006-01-02TT15:04:05", transaction.DateString)
+		if err != nil {
+			return nil, err
+		}
 		bqTransaction := models.BQTransaction{
 			TransactionID: transaction.BankTransactionID,
+			Company:       company,
+			Date:          date,
+			Amount:        transaction.Total,
+			Reference:     transaction.Reference,
+			Description:   transaction.LineItems[0].Description,
 		}
 		bqTransactions = append(bqTransactions, bqTransaction)
 	}
