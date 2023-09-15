@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>File Upload</title>
+</head>
+
+<body>
+    <h1>Import Status</h1>
+    {{if .TokenSet}}
+    <p id="status">Click to start import</p>
+    <button onclick="initiateImport()">Start Import</button>
+    {{else}}
+    <p id="status">Auth token not set.</p> 
+    <a href="/connect">Connect</a>
+    {{end}}
+
+
+    <script>
+        async function initiateImport() {
+            try {
+                const statusElement = document.getElementById("status");
+                statusElement.innerText = "Import in progress...";
+
+                const response = await fetch("/import", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                statusElement.innerText = data.message;
+            } catch (error) {
+                console.error("Fetch error: " + error);
+            }
+        }
+    </script>
+</body>
+
+</html>
