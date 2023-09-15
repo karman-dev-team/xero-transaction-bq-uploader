@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"text/template"
@@ -50,7 +51,8 @@ func handleImport(w http.ResponseWriter, r *http.Request) {
 		"message": msg,
 	}
 	if err != nil {
-		response["error"] = err.Error()
+		response["message"] = err.Error()
+		fmt.Println(err)
 	}
 
 	jsonResponse, err := json.Marshal(response)
@@ -69,14 +71,15 @@ func importXeroData() (string, error) {
 		{ID: os.Getenv("KD_TENANT_ID"), Company: "KD"}}
 
 	for _, tenant := range tenantID {
-		transactions, err := getAllTransactions(App.Oauth2Token, tenant.ID)
-		if err != nil {
-			return "Error", err
-		}
 		accountLookup, err := getAccountLookupTable(App.Oauth2Token, tenant.ID)
 		if err != nil {
 			return "Error", err
 		}
+		transactions, err := getAllTransactions(App.Oauth2Token, tenant.ID)
+		if err != nil {
+			return "Error", err
+		}
+
 		err = uploadInvoices(transactions, tenant.Company, accountLookup)
 		if err != nil {
 			return "Error", err

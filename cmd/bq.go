@@ -16,8 +16,9 @@ func uploadInvoices(invoices []models.XeroTransaction, company string, accountLo
 		return err
 	}
 	batchSize := 1000
-	batches := splitIntoBatches(bqInvoices, batchSize)
-	err = uploadToBQ(batches)
+	_ = splitIntoBatches(bqInvoices, batchSize)
+	// err = uploadToBQ(batches)
+
 	if err != nil {
 		return err
 	}
@@ -74,20 +75,25 @@ func splitIntoBatches(slice []models.BQTransaction, batchSize int) [][]models.BQ
 func convertToBQInvoice(transactions []models.XeroTransaction, company string, accountLookup map[string]string) ([]models.BQTransaction, error) {
 	bqTransactions := []models.BQTransaction{}
 	for _, transaction := range transactions {
-		date, err := time.Parse("2006-01-02TT15:04:05", transaction.DateString)
-		if err != nil {
-			return nil, err
+
+		if val, ok := accountLookup[transaction.LineItems[0].AccountCode]; ok {
+			date, err := time.Parse("2006-01-02T15:04:05", transaction.DateString)
+			if err != nil {
+				return nil, err
+			}
+
+			bqTransaction := models.BQTransaction{
+				TransactionID: transaction.BankTransactionID,
+				Company:       company,
+				Date:          date,
+				Amount:        transaction.Total,
+				Reference:     transaction.Reference,
+				Description:   transaction.LineItems[0].Description,
+				RevenueLine:   val,
+			}
+			bqTransactions = append(bqTransactions, bqTransaction)
 		}
-		bqTransaction := models.BQTransaction{
-			TransactionID: transaction.BankTransactionID,
-			Company:       company,
-			Date:          date,
-			Amount:        transaction.Total,
-			Reference:     transaction.Reference,
-			Description:   transaction.LineItems[0].Description,
-			RevenueLine:   accountLookup[transaction.LineItems[0].AccountCode],
-		}
-		bqTransactions = append(bqTransactions, bqTransaction)
+
 	}
 	return bqTransactions, nil
 }

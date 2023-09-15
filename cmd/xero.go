@@ -84,7 +84,7 @@ func getAccountLookupTable(token *oauth2.Token, tenantID string) (map[string]str
 
 func getAccounts(token *oauth2.Token, tenantID string) (models.AccountBody, error) {
 	accounts := models.AccountBody{}
-	req, err := http.NewRequest("GET", "https://api.xero.com/api.xro/2.0/BankTransactions", nil)
+	req, err := http.NewRequest("GET", "https://api.xero.com/api.xro/2.0/Accounts", nil)
 	if err != nil {
 		return accounts, err
 	}
