@@ -10,8 +10,8 @@ import (
 	"github.com/karman-dev-team/xero-transaction-bq-uploader/models"
 )
 
-func uploadInvoices(invoices []models.XeroTransaction, company string) error {
-	bqInvoices, err := convertToBQInvoice(invoices, company)
+func uploadInvoices(invoices []models.XeroTransaction, company string, accountLookup map[string]string) error {
+	bqInvoices, err := convertToBQInvoice(invoices, company, accountLookup)
 	if err != nil {
 		return err
 	}
@@ -71,7 +71,7 @@ func splitIntoBatches(slice []models.BQTransaction, batchSize int) [][]models.BQ
 	return batches
 }
 
-func convertToBQInvoice(transactions []models.XeroTransaction, company string) ([]models.BQTransaction, error) {
+func convertToBQInvoice(transactions []models.XeroTransaction, company string, accountLookup map[string]string) ([]models.BQTransaction, error) {
 	bqTransactions := []models.BQTransaction{}
 	for _, transaction := range transactions {
 		date, err := time.Parse("2006-01-02TT15:04:05", transaction.DateString)
@@ -85,6 +85,7 @@ func convertToBQInvoice(transactions []models.XeroTransaction, company string) (
 			Amount:        transaction.Total,
 			Reference:     transaction.Reference,
 			Description:   transaction.LineItems[0].Description,
+			RevenueLine:   accountLookup[transaction.LineItems[0].AccountCode],
 		}
 		bqTransactions = append(bqTransactions, bqTransaction)
 	}

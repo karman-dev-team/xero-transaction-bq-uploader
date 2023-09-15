@@ -69,3 +69,48 @@ func getTransactions(token *oauth2.Token, page int, tenantID string) ([]byte, er
 
 	return body, nil
 }
+
+func getAccountLookupTable(token *oauth2.Token, tenantID string) (map[string]string, error) {
+	accounts, err := getAccounts(token, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	accountLookup := make(map[string]string)
+	for _, account := range accounts.Account {
+		accountLookup[account.Code] = account.Name
+	}
+	return accountLookup, nil
+}
+
+func getAccounts(token *oauth2.Token, tenantID string) (models.AccountBody, error) {
+	accounts := models.AccountBody{}
+	req, err := http.NewRequest("GET", "https://api.xero.com/api.xro/2.0/BankTransactions", nil)
+	if err != nil {
+		return accounts, err
+	}
+	params := url.Values{}
+	params.Add("where", "Type!=\"BANK\"")
+	req.URL.RawQuery = params.Encode()
+	req.Header.Add("xero-tenant-id", tenantID)
+	req.Header.Add("Accept", "application/json")
+	client := oauth2Config.Client(context.Background(), token)
+	resp, err := client.Do(req)
+	if err != nil {
+		return accounts, err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return accounts, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("body: %s\n", body)
+		return accounts, fmt.Errorf("unexpected status: %s", resp.Status)
+	}
+	err = json.Unmarshal(body, &accounts)
+	if err != nil {
+		return accounts, err
+	}
+
+	return accounts, nil
+}

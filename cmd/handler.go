@@ -73,7 +73,11 @@ func importXeroData() (string, error) {
 		if err != nil {
 			return "Error", err
 		}
-		err = uploadInvoices(transactions, tenant.Company)
+		accountLookup, err := getAccountLookupTable(App.Oauth2Token, tenant.ID)
+		if err != nil {
+			return "Error", err
+		}
+		err = uploadInvoices(transactions, tenant.Company, accountLookup)
 		if err != nil {
 			return "Error", err
 		}
