@@ -84,6 +84,8 @@ type BQTransaction struct {
 	Reference     string    `bigquery:"reference"`
 	RevenueLine   string    `bigquery:"revenue_line"`
 	Description   string    `bigquery:"description"`
+	Group         string    `bigquery:"transfer_group"`
+	AccountCode   string    `bigquery:"account_code"`
 }
 
 type AccountBody struct {
@@ -100,4 +102,53 @@ type Account struct {
 	BankAccountNumber       string `json:"BankAccountNumber"`
 	BankAccountType         string `json:"BankAccountType"`
 	CurrencyCode            string `json:"CurrencyCode"`
+}
+
+type AccountLookup struct {
+	Name  string
+	Group string
+}
+
+type Journal struct {
+	JournalID      string        `json:"JournalID"`
+	JournalDate    string        `json:"JournalDate"`
+	JournalNumber  int           `json:"JournalNumber"`
+	CreatedDateUTC string        `json:"CreatedDateUTC"`
+	Reference      string        `json:"Reference"`
+	JournalLines   []JournalLine `json:"JournalLines"`
+}
+
+type JournalLine struct {
+	JournalLineID      string         `json:"JournalLineID"`
+	AccountID          string         `json:"AccountID"`
+	AccountCode        string         `json:"AccountCode"`
+	AccountType        string         `json:"AccountType"`
+	AccountName        string         `json:"AccountName"`
+	Description        string         `json:"Description"`
+	NetAmount          float64        `json:"NetAmount"`
+	GrossAmount        float64        `json:"GrossAmount"`
+	TaxAmount          float64        `json:"TaxAmount"`
+	TaxType            string         `json:"TaxType"`
+	TaxName            string         `json:"TaxName"`
+	TrackingCategories []TrackingItem `json:"TrackingCategories"`
+}
+
+type TrackingItem struct {
+	TrackingCategoryID string `json:"TrackingCategoryID"`
+	TrackingOptionID   string `json:"TrackingOptionID"`
+	Name               string `json:"Name"`
+	Option             string `json:"Option"`
+}
+
+type JournalsResponse struct {
+	Journals []Journal `json:"Journals"`
+}
+
+type AccountTransaction struct {
+	TransactionID string
+	Date          time.Time
+	Amount        float64
+	Reference     string
+	AccountCode   string
+	Description   string
 }

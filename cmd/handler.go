@@ -69,18 +69,32 @@ func importXeroData() (string, error) {
 	tenantID := []models.XeroCompany{
 		{ID: os.Getenv("CF_TENANT_ID"), Company: "CF"},
 		{ID: os.Getenv("KD_TENANT_ID"), Company: "KD"}}
-
+	var accountLookup = make(map[string]models.AccountLookup)
 	for _, tenant := range tenantID {
-		accountLookup, err := getAccountLookupTable(App.Oauth2Token, tenant.ID)
+		tempLookup, err := getAccountLookupTable(App.Oauth2Token, tenant.ID)
 		if err != nil {
 			return "Error", err
 		}
+		for key, value := range tempLookup {
+			accountLookup[key] = value
+		}
+	}
+	accountLookup = modifyAccountLookupTable(accountLookup)
+	for _, tenant := range tenantID {
 		transactions, err := getAllTransactions(App.Oauth2Token, tenant.ID)
 		if err != nil {
 			return "Error", err
 		}
-
-		err = uploadInvoices(transactions, tenant.Company, accountLookup)
+		journals, err := getAllJournals(App.Oauth2Token, tenant.ID)
+		if err != nil {
+			return "Error", err
+		}
+		entries, err := mergeTransactionsAndJournals(transactions, journals)
+		if err != nil {
+			return "Error", err
+		}
+		fmt.Println("Number of entries: ", len(entries))
+		err = uploadInvoices(entries, tenant.Company, accountLookup)
 		if err != nil {
 			return "Error", err
 		}

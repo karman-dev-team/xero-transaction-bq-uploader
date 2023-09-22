@@ -10,14 +10,14 @@ import (
 	"github.com/karman-dev-team/xero-transaction-bq-uploader/models"
 )
 
-func uploadInvoices(invoices []models.XeroTransaction, company string, accountLookup map[string]string) error {
-	bqInvoices, err := convertToBQInvoice(invoices, company, accountLookup)
+func uploadInvoices(transactions []models.AccountTransaction, company string, accountLookup map[string]models.AccountLookup) error {
+	bqInvoices, err := convertToBQInvoice(transactions, company, accountLookup)
 	if err != nil {
 		return err
 	}
 	batchSize := 1000
-	_ = splitIntoBatches(bqInvoices, batchSize)
-	// err = uploadToBQ(batches)
+	batches := splitIntoBatches(bqInvoices, batchSize)
+	err = uploadToBQ(batches)
 
 	if err != nil {
 		return err
@@ -72,28 +72,22 @@ func splitIntoBatches(slice []models.BQTransaction, batchSize int) [][]models.BQ
 	return batches
 }
 
-func convertToBQInvoice(transactions []models.XeroTransaction, company string, accountLookup map[string]string) ([]models.BQTransaction, error) {
+func convertToBQInvoice(transactions []models.AccountTransaction, company string, accountLookup map[string]models.AccountLookup) ([]models.BQTransaction, error) {
 	bqTransactions := []models.BQTransaction{}
 	for _, transaction := range transactions {
-
-		if val, ok := accountLookup[transaction.LineItems[0].AccountCode]; ok {
-			date, err := time.Parse("2006-01-02T15:04:05", transaction.DateString)
-			if err != nil {
-				return nil, err
-			}
-
+		if val, ok := accountLookup[transaction.AccountCode]; ok {
 			bqTransaction := models.BQTransaction{
-				TransactionID: transaction.BankTransactionID,
+				TransactionID: transaction.TransactionID,
 				Company:       company,
-				Date:          date,
-				Amount:        transaction.Total,
+				Date:          transaction.Date,
+				Amount:        transaction.Amount,
 				Reference:     transaction.Reference,
-				Description:   transaction.LineItems[0].Description,
-				RevenueLine:   val,
+				Description:   transaction.Description,
+				RevenueLine:   val.Name,
+				Group:         val.Group,
 			}
 			bqTransactions = append(bqTransactions, bqTransaction)
 		}
-
 	}
 	return bqTransactions, nil
 }

@@ -17,7 +17,7 @@ var (
 			AuthURL:  "https://login.xero.com/identity/connect/authorize",
 			TokenURL: "https://identity.xero.com/connect/token",
 		},
-		Scopes: []string{"offline_access accounting.transactions accounting.settings"},
+		Scopes: []string{"offline_access accounting.transactions accounting.settings accounting.journals.read"},
 	}
 )
 
